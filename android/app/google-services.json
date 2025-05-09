@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "325182710551",
+    "project_id": "rulerdoct-v1",
+    "storage_bucket": "rulerdoct-v1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:325182710551:android:8e71ba2787c547e157cd52",
+        "android_client_info": {
+          "package_name": "com.example.rolodoct"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCD-gxF4ID1eE88M1FIFMe75iZHfVvLxfg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
