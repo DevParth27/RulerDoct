@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:rolodoct/models/user_model.dart';
+import 'package:rolodoct/models/appointment_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
@@ -7,9 +8,10 @@ class StorageService {
   static const String _currentUserKey = 'current_user';
   static const String _usersKey = 'users';
   static const String _adminCodeKey = 'admin_code';
+  static const String _appointmentsKey = 'appointments';
 
   // Hardcoded admin code for doctor registration validation
-  static const String defaultAdminCode = 'DOCTOR123';
+  static const String defaultAdminCode = 'testDoctor1';
 
   // Get currently logged-in user
   Future<UserModel?> getCurrentUser() async {
@@ -155,4 +157,162 @@ class StorageService {
       await prefs.setStringList(_usersKey, encodedUsers);
     }
   }
+
+  // ==================== APPOINTMENT METHODS ====================
+
+  // Get all appointments
+  Future<List<AppointmentModel>> getAllAppointments() async {
+    final prefs = await SharedPreferences.getInstance();
+    final appointmentsJson = prefs.getStringList(_appointmentsKey) ?? [];
+
+    return appointmentsJson
+        .map((appointmentStr) => AppointmentModel.fromJson(appointmentStr))
+        .toList();
+  }
+
+  // Get appointments by patient ID
+  Future<List<AppointmentModel>> getAppointmentsByPatientId(
+    String patientId,
+  ) async {
+    final appointments = await getAllAppointments();
+    return appointments
+        .where((appointment) => appointment.patientId == patientId)
+        .toList();
+  }
+
+  // Get appointments by doctor type (specialization)
+  Future<List<AppointmentModel>> getAppointmentsByDoctorType(
+    String doctorType,
+  ) async {
+    final appointments = await getAllAppointments();
+    return appointments
+        .where((appointment) => appointment.doctorType == doctorType)
+        .toList();
+  }
+
+  // Save new appointment
+  Future<AppointmentModel> saveAppointment(AppointmentModel appointment) async {
+    final prefs = await SharedPreferences.getInstance();
+    final appointmentsJson = prefs.getStringList(_appointmentsKey) ?? [];
+
+    // Generate ID if new appointment
+    final newAppointment =
+        appointment.id.isEmpty
+            ? appointment.copyWith(id: const Uuid().v4())
+            : appointment;
+
+    // Check if appointment exists and update, or add new
+    final updatedAppointments = <String>[];
+    bool found = false;
+
+    for (final appointmentStr in appointmentsJson) {
+      final existingAppointment = AppointmentModel.fromJson(appointmentStr);
+
+      if (existingAppointment.id == newAppointment.id) {
+        updatedAppointments.add(newAppointment.toJson());
+        found = true;
+      } else {
+        updatedAppointments.add(appointmentStr);
+      }
+    }
+
+    if (!found) {
+      updatedAppointments.add(newAppointment.toJson());
+    }
+
+    await prefs.setStringList(_appointmentsKey, updatedAppointments);
+    return newAppointment;
+  }
+
+  // Update appointment status
+  Future<AppointmentModel> updateAppointmentStatus(
+    String appointmentId,
+    String status,
+  ) async {
+    final appointments = await getAllAppointments();
+    final appointmentToUpdate = appointments.firstWhere(
+      (appointment) => appointment.id == appointmentId,
+      orElse: () => throw Exception('Appointment not found'),
+    );
+
+    final updatedAppointment = appointmentToUpdate.copyWith(status: status);
+    await saveAppointment(updatedAppointment);
+
+    return updatedAppointment;
+  }
+
+  // Delete appointment
+  Future<void> deleteAppointment(String appointmentId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final appointmentsJson = prefs.getStringList(_appointmentsKey) ?? [];
+
+    final updatedAppointments =
+        appointmentsJson.where((appointmentStr) {
+          final appointment = AppointmentModel.fromJson(appointmentStr);
+          return appointment.id != appointmentId;
+        }).toList();
+
+    await prefs.setStringList(_appointmentsKey, updatedAppointments);
+  }
+
+  // Check if a time slot is available on a specific date
+  Future<bool> isTimeSlotAvailable(
+    String doctorType,
+    DateTime date,
+    String timeSlot,
+  ) async {
+    final appointments = await getAllAppointments();
+
+    return !appointments.any(
+      (appointment) =>
+          appointment.doctorType == doctorType &&
+          appointment.date.year == date.year &&
+          appointment.date.month == date.month &&
+          appointment.date.day == date.day &&
+          appointment.timeSlot == timeSlot &&
+          appointment.status != 'cancelled',
+    );
+  }
+
+  // Get available time slots
+  List<String> getAvailableTimeSlots() {
+    // Standard time slots from 9 AM to 5 PM
+    return [
+      '09:00 AM - 09:30 AM',
+      '09:30 AM - 10:00 AM',
+      '10:00 AM - 10:30 AM',
+      '10:30 AM - 11:00 AM',
+      '11:00 AM - 11:30 AM',
+      '11:30 AM - 12:00 PM',
+      '12:00 PM - 12:30 PM',
+      '12:30 PM - 01:00 PM',
+      '02:00 PM - 02:30 PM',
+      '02:30 PM - 03:00 PM',
+      '03:00 PM - 03:30 PM',
+      '03:30 PM - 04:00 PM',
+      '04:00 PM - 04:30 PM',
+      '04:30 PM - 05:00 PM',
+    ];
+  }
+
+  // Get available specializations from existing doctors
+  // Future<List<String>> getAvailableSpecializations() async {
+  //   final doctors = await getUsersByRole('doctor');
+  //   final specializations =
+  //       doctors
+  //           .map((doctor) => doctor.specialization)
+  //           .where((spec) => spec.isNotEmpty)
+  //           .toSet()
+  //           .toList();
+
+  //   return specializations.isEmpty
+  //       ? [
+  //         'General Medicine',
+  //         'Pediatrics',
+  //         'Cardiology',
+  //         'Orthopedics',
+  //         'Dermatology',
+  //       ] // Default if no doctors
+  //       : specializations;
+  // }
 }

@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:rolodoct/models/user_model.dart';
+import 'package:rolodoct/screens/patient/book_appointment_page.dart';
+import 'package:rolodoct/screens/patient/my_appointments_page.dart';
 import 'package:rolodoct/widgets/common_widgets.dart';
 
 class DoctorDetailsSheet extends StatelessWidget {
   final UserModel doctor;
 
-  const DoctorDetailsSheet({Key? key, required this.doctor}) : super(key: key);
+  const DoctorDetailsSheet({super.key, required this.doctor});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     return Container(
-      height: MediaQuery.of(context).size.height * 0.7,
+      height: MediaQuery.of(context).size.height * 0.9,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
@@ -47,7 +49,7 @@ class DoctorDetailsSheet extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 10),
 
           // Doctor profile
           Center(
@@ -89,7 +91,7 @@ class DoctorDetailsSheet extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 10),
 
           // Contact information
           Container(
@@ -144,11 +146,28 @@ class DoctorDetailsSheet extends StatelessWidget {
             text: 'Book Appointment',
             icon: Icons.calendar_today,
             onPressed: () {
-              Navigator.of(context).pop();
-              AppToast.show(context, 'Appointment feature coming soon!');
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const BookAppointmentPage(),
+                ),
+              );
             },
           ),
           const SizedBox(height: 16),
+          ListTile(
+            leading: const Icon(Icons.list_alt),
+            title: const Text('My Appointments'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const MyAppointmentsPage(),
+                ),
+              );
+            },
+          ),
           RuralHealthcareButton(
             text: 'Send Message',
             icon: Icons.message,

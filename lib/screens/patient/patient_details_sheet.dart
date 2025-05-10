@@ -5,15 +5,14 @@ import 'package:rolodoct/widgets/common_widgets.dart';
 class PatientDetailsSheet extends StatelessWidget {
   final UserModel patient;
 
-  const PatientDetailsSheet({Key? key, required this.patient})
-    : super(key: key);
+  const PatientDetailsSheet({super.key, required this.patient});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     return Container(
-      height: MediaQuery.of(context).size.height * 0.6,
+      height: MediaQuery.of(context).size.height * 0.9,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
