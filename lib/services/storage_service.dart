@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:rolodoct/models/user_model.dart';
 import 'package:rolodoct/models/appointment_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uuid/uuid.dart';
 
 class StorageService {
@@ -100,9 +101,34 @@ class StorageService {
 
   // Validate doctor registration code
   Future<bool> validateAdminCode(String code) async {
+    final firestore = FirebaseFirestore.instance;
     final prefs = await SharedPreferences.getInstance();
-    final savedCode = prefs.getString(_adminCodeKey) ?? defaultAdminCode;
 
+    try {
+      // First, check Firestore
+      final querySnapshot =
+          await firestore
+              .collection('adminCodes')
+              .where('code', isEqualTo: code)
+              .where('isUsed', isEqualTo: false)
+              .limit(1)
+              .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        // Optionally mark the code as used
+        final doc = querySnapshot.docs.first;
+        await firestore.collection('adminCodes').doc(doc.id).update({
+          'isUsed': true,
+        });
+        return true;
+      }
+    } catch (e) {
+      print('Error validating admin code from Firestore: $e');
+      // Continue to fallback
+    }
+
+    // Fallback to local value from SharedPreferences or default
+    final savedCode = prefs.getString(_adminCodeKey) ?? defaultAdminCode;
     return code == savedCode;
   }
 
