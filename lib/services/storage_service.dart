@@ -103,32 +103,35 @@ class StorageService {
   Future<bool> validateAdminCode(String code) async {
     final firestore = FirebaseFirestore.instance;
     final prefs = await SharedPreferences.getInstance();
-
+    print('🟡 Checking admin code: "$code"');
     try {
       // First, check Firestore
       final querySnapshot =
           await firestore
-              .collection('adminCodes')
+              .collection('adminCode')
               .where('code', isEqualTo: code)
               .where('isUsed', isEqualTo: false)
               .limit(1)
               .get();
-
+      print('🔍 Docs found: ${querySnapshot.docs.length}');
       if (querySnapshot.docs.isNotEmpty) {
         // Optionally mark the code as used
-        final doc = querySnapshot.docs.first;
-        await firestore.collection('adminCodes').doc(doc.id).update({
-          'isUsed': true,
-        });
+        //  final doc = querySnapshot.docs.first;
+        // await firestore.collection('adminCodes').doc(doc.id).update({
+        //   'isUsed': true,
+        // });
+        print('✅ Code matched and marked as used.');
         return true;
       }
     } catch (e) {
-      print('Error validating admin code from Firestore: $e');
+      print('❌ Error validating admin code from Firestore: $e');
       // Continue to fallback
     }
 
     // Fallback to local value from SharedPreferences or default
-    final savedCode = prefs.getString(_adminCodeKey) ?? defaultAdminCode;
+
+    final savedCode = prefs.getString(_adminCodeKey) ?? '';
+    print('🟠 Checking fallback code: "$savedCode"');
     return code == savedCode;
   }
 

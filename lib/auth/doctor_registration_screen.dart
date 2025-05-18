@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:rolodoct/screens/doctor/doctor_dashboard.dart';
 import 'package:rolodoct/services/auth_service.dart';
@@ -60,7 +61,7 @@ class _DoctorRegistrationScreenState extends State<DoctorRegistrationScreen> {
 
     try {
       final isValid = await _authService.validateAdminCode(
-        _adminCodeController.text,
+        _adminCodeController.text.trim(),
       );
 
       setState(() {
@@ -117,7 +118,16 @@ class _DoctorRegistrationScreenState extends State<DoctorRegistrationScreen> {
         specialization: _selectedSpecialization,
         adminCode: _adminCodeController.text.trim(),
       );
+      await FirebaseFirestore.instance.collection('doctors').add({
+        'name': _nameController.text,
+        'email': _emailController.text,
+        'phone': _phoneController.text,
+        'isVerified': true,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
 
+      AppToast.show(context, 'Registration successful!');
+      Navigator.of(context).popUntil((route) => route.isFirst);
       if (mounted) {
         // Registration successful, navigate to doctor dashboard
         Navigator.of(context).pushAndRemoveUntil(

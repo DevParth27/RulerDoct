@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:rolodoct/auth/doctor_registration_screen.dart';
-import 'package:rolodoct/models/doctor_model.dart';
 import 'package:rolodoct/screens/patient/patient_dashboard.dart';
 import 'package:rolodoct/services/auth_service.dart';
 import 'package:rolodoct/widgets/common_widgets.dart';
@@ -17,7 +16,7 @@ class AuthScreen extends StatefulWidget {
 
 class _AuthScreenState extends State<AuthScreen>
     with SingleTickerProviderStateMixin {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  // final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final AuthService _authService = AuthService();
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
