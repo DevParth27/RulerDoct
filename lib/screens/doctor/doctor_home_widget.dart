@@ -1,5 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:rolodoct/models/patient_model.dart';
 import 'package:rolodoct/models/user_model.dart';
 import 'package:rolodoct/widgets/common_widgets.dart';
 
@@ -18,6 +20,12 @@ class DoctorHomeWidget extends StatelessWidget {
     required this.onRefresh,
     required this.onPatientSelected,
   });
+  Future<List<Patient>> fetchPatients() async {
+    final snapshot =
+        await FirebaseFirestore.instance.collection('Patient').get();
+
+    return snapshot.docs.map((doc) => Patient.fromMap(doc.data())).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -318,16 +326,43 @@ class DoctorHomeWidget extends StatelessWidget {
               ),
             )
           else
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: patients.length,
-              itemBuilder: (context, index) {
-                final patient = patients[index];
-                return PatientCard(
-                  name: patient.name,
-                  phone: patient.phone,
-                  onTap: () => onPatientSelected(patient),
+            FutureBuilder<List<Patient>>(
+              future: fetchPatients(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const Center(child: Text('No patients found.'));
+                }
+
+                final patients = snapshot.data!;
+                return ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: patients.length,
+                  itemBuilder: (context, index) {
+                    final patient = patients[index];
+                    return PatientCard(
+                      name: patient.name,
+                      phone: patient.phone,
+                      onTap:
+                          () => onPatientSelected(
+                            UserModel(
+                              id: '', // Add doc.id here if available
+                              name: patient.name,
+                              phone: patient.phone,
+                              email: null,
+                              role: 'patient',
+                              specialization: null,
+                              createdAt:
+                                  DateTime.now(), // or use proper timestamp if available
+                            ),
+                          ),
+                      // ✅ no cast needed
+                    );
+                  },
                 );
               },
             ),

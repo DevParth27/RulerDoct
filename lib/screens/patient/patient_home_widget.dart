@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:rolodoct/models/user_model.dart';
 import 'package:rolodoct/widgets/common_widgets.dart';
@@ -17,6 +18,25 @@ class PatientHomeWidget extends StatelessWidget {
     required this.onRefresh,
     required this.onDoctorSelected,
   }) : super(key: key);
+
+  Future<List<UserModel>> fetchDoctors() async {
+    final snapshot =
+        await FirebaseFirestore.instance.collection('doctors').get();
+
+    return snapshot.docs.map((doc) {
+      final data = doc.data();
+      return UserModel(
+        id: doc.id,
+        name: data['name'] ?? 'Unknown',
+        email: data['email'],
+        phone: data['phone'],
+        role: 'doctor',
+        specialization:
+            data['specialization'], // Add this field in Firebase if needed
+        createdAt: (data['createdAt'] as Timestamp).toDate(),
+      );
+    }).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -239,17 +259,31 @@ class PatientHomeWidget extends StatelessWidget {
               ),
             )
           else
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: doctors.length,
-              itemBuilder: (context, index) {
-                final doctor = doctors[index];
-                return DoctorCard(
-                  name: doctor.name,
-                  specialization: doctor.specialization,
-                  phone: doctor.phone,
-                  onTap: () => onDoctorSelected(doctor),
+            FutureBuilder<List<UserModel>>(
+              future: fetchDoctors(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const Center(child: Text('No doctors found.'));
+                }
+
+                final doctors = snapshot.data!;
+                return ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: doctors.length,
+                  itemBuilder: (context, index) {
+                    final doctor = doctors[index];
+                    return DoctorCard(
+                      name: doctor.name,
+                      specialization: doctor.specialization,
+                      phone: doctor.phone,
+                      onTap: () => onDoctorSelected(doctor),
+                    );
+                  },
                 );
               },
             ),
