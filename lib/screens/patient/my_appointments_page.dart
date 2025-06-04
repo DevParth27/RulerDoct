@@ -7,7 +7,7 @@ import 'package:rolodoct/services/storage_service.dart';
 import 'package:rolodoct/widgets/common_widgets.dart';
 
 class MyAppointmentsPage extends StatefulWidget {
-  const MyAppointmentsPage({Key? key}) : super(key: key);
+  const MyAppointmentsPage({super.key});
 
   @override
   State<MyAppointmentsPage> createState() => _MyAppointmentsPageState();
@@ -107,7 +107,7 @@ class _MyAppointmentsPageState extends State<MyAppointmentsPage> {
 
   Future<void> _navigateToBookAppointment() async {
     final result = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(builder: (context) => const BookAppointmentPage()),
+      MaterialPageRoute(builder: (context) => const AppointmentBookingPage()),
     );
 
     if (result == true) {

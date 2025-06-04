@@ -149,7 +149,7 @@ class DoctorDetailsSheet extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const BookAppointmentPage(),
+                  builder: (context) => const AppointmentBookingPage(),
                 ),
               );
             },

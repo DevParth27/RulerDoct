@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:rolodoct/auth/contactAdminScreen.dart';
 import 'package:rolodoct/auth/doctor_registration_screen.dart';
 import 'package:rolodoct/screens/patient/patient_dashboard.dart';
 import 'package:rolodoct/services/auth_service.dart';
@@ -135,7 +136,7 @@ class _AuthScreenState extends State<AuthScreen>
   // Animation for invalid form submission
   void _animateInvalidForm() {
     const int count = 3;
-    const double distance = 10;
+    //   const double distance = 10;
     const Duration duration = Duration(milliseconds: 80);
 
     final controller = AnimationController(
@@ -143,21 +144,21 @@ class _AuthScreenState extends State<AuthScreen>
       duration: Duration(milliseconds: count * 2 * duration.inMilliseconds),
     );
 
-    final Animation<Offset> animation = TweenSequence<Offset>(
-      List.generate(count * 2, (index) {
-        final bool isEven = index.isEven;
-        final double direction = isEven ? 1 : -1;
-        final double tween = isEven ? distance : 0;
+    // final Animation<Offset> animation = TweenSequence<Offset>(
+    //   List.generate(count * 2, (index) {
+    //     final bool isEven = index.isEven;
+    //     final double direction = isEven ? 1 : -1;
+    //     final double tween = isEven ? distance : 0;
 
-        return TweenSequenceItem(
-          tween: Tween(
-            begin: Offset(direction * tween, 0),
-            end: Offset(direction * (isEven ? 0 : distance), 0),
-          ),
-          weight: 1,
-        );
-      }),
-    ).animate(controller);
+    //     return TweenSequenceItem(
+    //       tween: Tween(
+    //         begin: Offset(direction * tween, 0),
+    //         end: Offset(direction * (isEven ? 0 : distance), 0),
+    //       ),
+    //       weight: 1,
+    //     );
+    //   }),
+    // ).animate(controller);
 
     controller.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
@@ -532,11 +533,28 @@ class _AuthScreenState extends State<AuthScreen>
                                         ],
                                       ),
                                     ),
-                                    const SizedBox(height: 30),
+                                    const SizedBox(height: 15),
+                                    //  const SizedBox(height: ),
                                     RuralHealthcareButton(
                                       text: 'Register as Doctor',
                                       icon: Icons.app_registration_rounded,
                                       onPressed: _navigateToDoctorRegistration,
+                                    ),
+
+                                    //buttonfor contact admin
+                                    RuralHealthcareButton(
+                                      text: 'Contact Admin',
+                                      icon: Icons.admin_panel_settings,
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder:
+                                                (context) =>
+                                                    const ContactAdminPage(),
+                                          ),
+                                        );
+                                      },
                                     ),
                                   ],
                                 ),

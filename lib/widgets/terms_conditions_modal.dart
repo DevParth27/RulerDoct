@@ -5,8 +5,8 @@ class TermsAndConditionsModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final screenSize = MediaQuery.of(context).size;
+    // final theme = Theme.of(context);
+    //  final screenSize = MediaQuery.of(context).size;
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
