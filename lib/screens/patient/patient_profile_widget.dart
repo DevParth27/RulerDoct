@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:rolodoct/models/user_model.dart';
+import 'package:rolodoct/utils/aboutUs.dart';
 import 'package:rolodoct/widgets/common_widgets.dart';
 
 class PatientProfileWidget extends StatelessWidget {
@@ -7,10 +8,10 @@ class PatientProfileWidget extends StatelessWidget {
   final Function() onSignOut;
 
   const PatientProfileWidget({
-    Key? key,
+    super.key,
     required this.patient,
     required this.onSignOut,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +65,7 @@ class PatientProfileWidget extends StatelessWidget {
         const SizedBox(height: 32),
 
         // Profile Details Card
-        _buildProfileCard(theme),
+        //  _buildProfileCard(theme),
         const SizedBox(height: 24),
 
         // Account Settings Section
@@ -90,16 +91,6 @@ class PatientProfileWidget extends StatelessWidget {
               // Account action items
               _buildSettingsItem(
                 theme,
-                'Edit Profile',
-                Icons.edit,
-                theme.colorScheme.secondary,
-                () {
-                  AppToast.show(context, 'Edit profile feature coming soon!');
-                },
-              ),
-              Divider(color: theme.colorScheme.outline.withOpacity(0.3)),
-              _buildSettingsItem(
-                theme,
                 'Notification Settings',
                 Icons.notifications_none,
                 theme.colorScheme.tertiary,
@@ -107,6 +98,20 @@ class PatientProfileWidget extends StatelessWidget {
                   AppToast.show(context, 'Notification settings coming soon!');
                 },
               ),
+              Divider(color: theme.colorScheme.outline.withOpacity(0.3)),
+              _buildSettingsItem(
+                theme,
+                'About Us',
+                Icons.info_outline,
+                theme.colorScheme.secondary,
+                () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => AboutUsPage()),
+                  );
+                },
+              ),
+
               Divider(color: theme.colorScheme.outline.withOpacity(0.3)),
               _buildSettingsItem(
                 theme,
@@ -123,7 +128,7 @@ class PatientProfileWidget extends StatelessWidget {
         // App version info
         Center(
           child: Text(
-            'Version 1.0.0',
+            'Version 1.1.2',
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurface.withOpacity(0.5),
             ),
