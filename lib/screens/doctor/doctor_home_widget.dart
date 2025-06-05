@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:rolodoct/models/patient_model.dart';
 import 'package:rolodoct/models/user_model.dart';
+import 'package:rolodoct/screens/doctor/Appointment/handleAppointment.dart';
 import 'package:rolodoct/widgets/common_widgets.dart';
 
 class DoctorHomeWidget extends StatelessWidget {
@@ -127,43 +128,76 @@ class DoctorHomeWidget extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 // Stats Cards
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildStatCard(
-                        theme,
-                        Icons.people_alt_outlined,
-                        '${patients.length}',
-                        'Patients',
-                        theme.colorScheme.primary,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _buildStatCard(
-                        theme,
-                        Icons.calendar_month_outlined,
-                        '4',
-                        'Appointments',
-                        theme.colorScheme.secondary,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _buildStatCard(
-                        theme,
-                        Icons.pending_actions_outlined,
-                        '2',
-                        'Pending',
-                        theme.colorScheme.tertiary,
-                      ),
-                    ),
-                  ],
+                FutureBuilder<QuerySnapshot>(
+                  future:
+                      FirebaseFirestore.instance
+                          .collection('appointments')
+                          .get(),
+                  builder: (context, snapshot) {
+                    // Default values
+                    String totalCount = '0';
+                    String pendingCount = '0';
+
+                    // Calculate counts only if we have data
+                    if (snapshot.connectionState == ConnectionState.done &&
+                        snapshot.hasData &&
+                        snapshot.data != null) {
+                      final docs = snapshot.data!.docs;
+                      totalCount = docs.length.toString();
+
+                      int pending = 0;
+                      for (var doc in docs) {
+                        try {
+                          final data = doc.data() as Map<String, dynamic>;
+                          if (data['status']?.toString().toLowerCase() ==
+                              'pending') {
+                            pending++;
+                          }
+                        } catch (e) {
+                          // Skip problematic documents
+                        }
+                      }
+                      pendingCount = pending.toString();
+                    }
+
+                    return Row(
+                      children: [
+                        Expanded(
+                          child: _buildStatCard(
+                            theme,
+                            Icons.people_alt_outlined,
+                            '${patients.length}',
+                            'Patients',
+                            theme.colorScheme.primary,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _buildStatCard(
+                            theme,
+                            Icons.calendar_month_outlined,
+                            totalCount,
+                            'Appointments',
+                            theme.colorScheme.secondary,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _buildStatCard(
+                            theme,
+                            Icons.pending_actions_outlined,
+                            pendingCount,
+                            'Pending',
+                            theme.colorScheme.tertiary,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ],
             ),
           ),
-
           const SizedBox(height: 24),
 
           // Today's Appointments
@@ -184,61 +218,146 @@ class DoctorHomeWidget extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.today_rounded,
-                          color: theme.colorScheme.onPrimary,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Today\'s Schedule',
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            color: theme.colorScheme.onPrimary,
-                            fontWeight: FontWeight.bold,
+                StreamBuilder<QuerySnapshot>(
+                  stream:
+                      FirebaseFirestore.instance
+                          .collection('appointments')
+                          .orderBy('timeSlot') // Order by time
+                          .snapshots(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return Column(
+                        children: [
+                          _buildLoadingAppointmentItem(theme),
+                          Divider(
+                            color: theme.colorScheme.onPrimary.withOpacity(0.2),
+                            height: 20,
+                          ),
+                          _buildLoadingAppointmentItem(theme),
+                        ],
+                      );
+                    }
+
+                    if (snapshot.hasError) {
+                      return Center(
+                        child: Text(
+                          'Error loading appointments',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onPrimary.withOpacity(0.8),
                           ),
                         ),
-                      ],
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.onPrimary.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        'View All',
-                        style: theme.textTheme.labelMedium?.copyWith(
-                          color: theme.colorScheme.onPrimary,
-                          fontWeight: FontWeight.bold,
+                      );
+                    }
+
+                    if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                      return Center(
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.event_busy,
+                              color: theme.colorScheme.onPrimary.withOpacity(
+                                0.6,
+                              ),
+                              size: 48,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'No appointments today',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.onPrimary.withOpacity(
+                                  0.8,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                // Sample Appointments
-                _buildAppointmentItem(
-                  theme,
-                  '09:00 AM',
-                  'Mary Smith',
-                  'General Checkup',
-                ),
-                Divider(
-                  color: theme.colorScheme.onPrimary.withOpacity(0.2),
-                  height: 20,
-                ),
-                _buildAppointmentItem(
-                  theme,
-                  '11:30 AM',
-                  'John Kumar',
-                  'Follow-up',
+                      );
+                    }
+
+                    final appointments = snapshot.data!.docs;
+
+                    return Column(
+                      children: [
+                        // Show maximum 5 appointments to avoid overflow
+                        ...appointments.take(5).map((doc) {
+                          final data = doc.data() as Map<String, dynamic>;
+                          final time = data['timeSlot'] ?? '00:00 AM';
+                          final patientName =
+                              data['patientName'] ?? 'Unknown Patient';
+                          final reason =
+                              data['reason'] ?? 'General Consultation';
+
+                          return Column(
+                            children: [
+                              InkWell(
+                                onTap: () {
+                                  // Navigate to appointment details
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (context) => AppointmentHandlerPage(
+                                            patientName: patientName,
+                                            appointmentData: data,
+                                          ),
+                                    ),
+                                  );
+                                },
+                                child: _buildAppointmentItem(
+                                  theme,
+                                  time,
+                                  patientName,
+                                  reason,
+                                ),
+                              ),
+                              if (appointments.indexOf(doc) <
+                                  appointments.take(5).length - 1)
+                                Divider(
+                                  color: theme.colorScheme.onPrimary
+                                      .withOpacity(0.2),
+                                  height: 20,
+                                ),
+                            ],
+                          );
+                        }),
+
+                        // Show "View All" if there are more than 5 appointments
+                        if (appointments.length > 5) ...[
+                          const SizedBox(height: 12),
+                          InkWell(
+                            onTap: () {
+                              // Navigate to full appointments list
+                              // Navigator.push(context, MaterialPageRoute(builder: (context) => AllAppointmentsPage()));
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 8,
+                                horizontal: 16,
+                              ),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.onPrimary.withOpacity(
+                                  0.1,
+                                ),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: theme.colorScheme.onPrimary
+                                      .withOpacity(0.3),
+                                ),
+                              ),
+                              child: Text(
+                                '+${appointments.length - 5} more appointments',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onPrimary
+                                      .withOpacity(0.9),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    );
+                  },
                 ),
               ],
             ),
@@ -404,6 +523,69 @@ class DoctorHomeWidget extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  // String _getTodayDateString() {
+  //   final now = DateTime.now();
+  //   return "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+  // }
+
+  Widget _buildLoadingAppointmentItem(ThemeData theme) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.onPrimary.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            '...',
+            style: theme.textTheme.titleSmall?.copyWith(
+              color: theme.colorScheme.onPrimary.withOpacity(0.5),
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                height: 16,
+                width: 120,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.onPrimary.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Container(
+                height: 14,
+                width: 80,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.onPrimary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.onPrimary.withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            Icons.arrow_forward_ios,
+            color: theme.colorScheme.onPrimary.withOpacity(0.5),
+            size: 16,
+          ),
+        ),
+      ],
     );
   }
 
