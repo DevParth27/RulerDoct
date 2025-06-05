@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:rolodoct/models/user_model.dart';
+import 'package:rolodoct/utils/aboutUs.dart';
 
 import 'package:rolodoct/widgets/common_widgets.dart';
 
@@ -8,10 +9,10 @@ class DoctorProfileWidget extends StatelessWidget {
   final Function() onSignOut;
 
   const DoctorProfileWidget({
-    Key? key,
+    super.key,
     required this.doctor,
     required this.onSignOut,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -230,18 +231,21 @@ class DoctorProfileWidget extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
-                    Icons.schedule,
+                    Icons.info,
                     color: theme.colorScheme.tertiary,
                     size: 20,
                   ),
                 ),
-                title: const Text('Availability Hours'),
+                title: const Text('About Us'),
                 trailing: Icon(
                   Icons.chevron_right,
                   color: theme.colorScheme.onSurface.withOpacity(0.5),
                 ),
                 onTap: () {
-                  AppToast.show(context, 'Availability feature coming soon!');
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => AboutUsPage()),
+                  );
                 },
               ),
               Divider(color: theme.colorScheme.outline.withOpacity(0.3)),
@@ -273,7 +277,7 @@ class DoctorProfileWidget extends StatelessWidget {
         // App version
         Center(
           child: Text(
-            'Version 1.0.0',
+            'Version 1.1.2',
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurface.withOpacity(0.5),
             ),

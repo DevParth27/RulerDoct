@@ -64,8 +64,8 @@ class _AboutUsPageState extends State<AboutUsPage>
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width > 768;
-    final isMobile = MediaQuery.of(context).size.width < 768;
+    // final isDesktop = MediaQuery.of(context).size.width > 768;
+    // final isMobile = MediaQuery.of(context).size.width < 768;
 
     return Scaffold(
       appBar: AppBar(
@@ -401,7 +401,7 @@ class _AboutUsPageState extends State<AboutUsPage>
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    _buildStatItem('10+', 'Happy Clients', context),
+                    _buildStatItem('10+', 'Happy Doctors', context),
                     _buildStatItem('200+', 'Happy Patients', context),
                   ],
                 ),
@@ -419,7 +419,7 @@ class _AboutUsPageState extends State<AboutUsPage>
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildStatItem('10+', 'Happy Clients', context),
+                _buildStatItem('10+', 'Happy Doctors', context),
                 _buildStatItem('200+', 'Happy Patients', context),
                 _buildStatItem('1', 'Team Member', context),
                 _buildStatItem('3+', 'Years Experience', context),

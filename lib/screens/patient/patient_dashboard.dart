@@ -10,7 +10,7 @@ import 'package:rolodoct/widgets/common_widgets.dart';
 class PatientDashboard extends StatefulWidget {
   final UserModel patient;
 
-  const PatientDashboard({Key? key, required this.patient}) : super(key: key);
+  const PatientDashboard({super.key, required this.patient});
 
   @override
   State<PatientDashboard> createState() => _PatientDashboardState();
