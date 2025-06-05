@@ -35,7 +35,14 @@ class _PatientDetailsSheetState extends State<PatientDetailsSheet> {
     _bloodTypeController = TextEditingController();
     _recentVisitController = TextEditingController();
     _ongoingTreatmentController = TextEditingController();
-    _loadHealthData();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_isLoading) {
+      _loadHealthData();
+    }
   }
 
   @override
@@ -56,7 +63,7 @@ class _PatientDetailsSheetState extends State<PatientDetailsSheet> {
       DocumentSnapshot patientDoc =
           await _firestore
               .collection('Patient')
-              .doc(widget.patient.id) // Assuming patient has uid field
+              .doc(widget.patient.name) // Assuming patient has uid field
               .get();
 
       if (patientDoc.exists) {
@@ -121,7 +128,7 @@ class _PatientDetailsSheetState extends State<PatientDetailsSheet> {
       };
 
       // Save to Firestore
-      await _firestore.collection('Patient').doc(widget.patient.id).set({
+      await _firestore.collection('Patient').doc(widget.patient.name).set({
         'healthSummary': healthSummaryData,
       }, SetOptions(merge: true)); // Use merge to not overwrite other fields
 
