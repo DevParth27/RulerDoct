@@ -128,9 +128,13 @@ class _PatientDetailsSheetState extends State<PatientDetailsSheet> {
       };
 
       // Save to Firestore
-      await _firestore.collection('Patient').doc(widget.patient.name).set({
-        'healthSummary': healthSummaryData,
-      }, SetOptions(merge: true)); // Use merge to not overwrite other fields
+      await _firestore
+          .collection('patient_health')
+          .doc(widget.patient.name)
+          .set(
+            {'healthSummary': healthSummaryData},
+            SetOptions(merge: true),
+          ); // Use merge to not overwrite other fields
 
       // Update local state
       setState(() {

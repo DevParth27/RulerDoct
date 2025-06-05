@@ -137,7 +137,7 @@ class DoctorHomeWidget extends StatelessWidget {
                     // Default values
                     String totalCount = '0';
                     String pendingCount = '0';
-
+                    String patientCount1 = '0';
                     // Calculate counts only if we have data
                     if (snapshot.connectionState == ConnectionState.done &&
                         snapshot.hasData &&
@@ -157,7 +157,15 @@ class DoctorHomeWidget extends StatelessWidget {
                           // Skip problematic documents
                         }
                       }
+                      int patientCount = 0;
+
+                      for (var doc in snapshot.data!.docs) {
+                        if (doc.exists) {
+                          patientCount++;
+                        }
+                      }
                       pendingCount = pending.toString();
+                      patientCount1 = patientCount.toString();
                     }
 
                     return Row(
@@ -166,7 +174,7 @@ class DoctorHomeWidget extends StatelessWidget {
                           child: _buildStatCard(
                             theme,
                             Icons.people_alt_outlined,
-                            '${patients.length}',
+                            patientCount1,
                             'Patients',
                             theme.colorScheme.primary,
                           ),
