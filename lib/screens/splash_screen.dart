@@ -196,8 +196,8 @@ class _SplashScreenState extends State<SplashScreen>
             SizedBox(
               height: 100,
               width: 200,
-              child: Lottie.network(
-                'https://assets8.lottiefiles.com/private_files/lf30_yABOcr.json',
+              child: Lottie.asset(
+                'assets/animations/lottie_loading1.json',
                 controller: _animationController,
                 onLoaded: (composition) {
                   _animationController
