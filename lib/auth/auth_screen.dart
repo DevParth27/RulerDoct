@@ -24,12 +24,19 @@ class _AuthScreenState extends State<AuthScreen>
   final _phoneController = TextEditingController();
   late TabController _tabController;
   bool _isLoading = false;
+  String _currentVersion = "";
+  bool _isCheckingVersion = true;
+  bool _isUnderMaintenance = false;
+  String _maintenanceMessage = "";
+  String _expectedCompletionTime = "";
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(_handleTabChange);
+    _checkAppVersion();
+    _checkMaintenanceStatus();
   }
 
   void _handleTabChange() {
@@ -48,6 +55,179 @@ class _AuthScreenState extends State<AuthScreen>
     _tabController.removeListener(_handleTabChange);
     _tabController.dispose();
     super.dispose();
+  }
+
+  Future<void> _checkAppVersion() async {
+    try {
+      final versionDoc =
+          await FirebaseFirestore.instance
+              .collection('appVersion')
+              .doc('current')
+              .get();
+
+      if (versionDoc.exists) {
+        final forceUpdateVersion = versionDoc.data()?['forceUpdateVersion'];
+        final softUpdateVersion = versionDoc.data()?['softUpdateVersion'];
+        final currentAppVersion = versionDoc.data()?['currentVersion'];
+
+        setState(() {
+          _currentVersion = currentAppVersion ?? "";
+          _isCheckingVersion = false;
+        });
+
+        if (forceUpdateVersion != null &&
+            currentAppVersion != forceUpdateVersion) {
+          // Show force update dialog
+          if (mounted) {
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder:
+                  (context) => AlertDialog(
+                    title: const Text('Update Required'),
+                    content: const Text(
+                      'A new version of the app is available. You must update to continue using the app.',
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () {
+                          // Add your app store link here
+                          // You can use url_launcher package to open store
+                        },
+                        child: const Text('Update Now'),
+                      ),
+                    ],
+                  ),
+            );
+          }
+        } else if (softUpdateVersion != null &&
+            currentAppVersion != softUpdateVersion) {
+          // Show soft update dialog
+          if (mounted) {
+            showDialog(
+              context: context,
+              builder:
+                  (context) => AlertDialog(
+                    title: const Text('Update Available'),
+                    content: const Text(
+                      'A new version of the app is available. Would you like to update?',
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Later'),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          // Add your app store link here
+                          // You can use url_launcher package to open store
+                        },
+                        child: const Text('Update Now'),
+                      ),
+                    ],
+                  ),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      setState(() => _isCheckingVersion = false);
+      print('Error checking app version: $e');
+    }
+  }
+
+  Future<void> _checkMaintenanceStatus() async {
+    try {
+      final maintenanceDoc =
+          await FirebaseFirestore.instance
+              .collection('maintenance')
+              .doc('status')
+              .get();
+
+      if (maintenanceDoc.exists) {
+        final isUnderMaintenance =
+            maintenanceDoc.data()?['isUnderMaintenance'] ?? false;
+        final message =
+            maintenanceDoc.data()?['message'] ?? "System is under maintenance";
+        final expectedTime =
+            maintenanceDoc.data()?['expectedCompletionTime'] ?? "";
+
+        if (isUnderMaintenance && mounted) {
+          setState(() {
+            _isUnderMaintenance = true;
+            _maintenanceMessage = message;
+            _expectedCompletionTime = expectedTime;
+          });
+
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder:
+                (context) => WillPopScope(
+                  onWillPop: () async => false,
+                  child: AlertDialog(
+                    title: Row(
+                      children: [
+                        Icon(
+                          Icons.engineering,
+                          color: Theme.of(context).primaryColor,
+                        ),
+                        const SizedBox(width: 10),
+                        const Text('System Maintenance'),
+                      ],
+                    ),
+                    content: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _maintenanceMessage,
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                        const SizedBox(height: 16),
+                        if (_expectedCompletionTime.isNotEmpty) ...[
+                          Text(
+                            'Expected Completion Time:',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color:
+                                  Theme.of(context).textTheme.bodySmall?.color,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _expectedCompletionTime,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 16),
+                        Text(
+                          'Please try again later.',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Theme.of(context).textTheme.bodySmall?.color,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ],
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => _checkMaintenanceStatus(),
+                        child: const Text('Refresh Status'),
+                      ),
+                    ],
+                  ),
+                ),
+          );
+        }
+      }
+    } catch (e) {
+      print('Error checking maintenance status: $e');
+    }
   }
 
   Future<void> _patientLogin() async {
@@ -608,6 +788,14 @@ class _AuthScreenState extends State<AuthScreen>
               ),
             ),
           ),
+        ),
+      ),
+      bottomNavigationBar: Container(
+        padding: const EdgeInsets.all(16),
+        child: Text(
+          'App Version: $_currentVersion',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.grey[600]),
         ),
       ),
     );
